@@ -13,7 +13,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-os.system("export SSLKEYLOGFILE=" + os.getcwd() + "/sslkey.log")
+# os.environ['SSLKEYLOGFILE'] = os.getcwd() + '/sslkey.log' 
+# export SSLKEYLOGFILE  = $HOME/sslkey.log 
 
 binary = FirefoxBinary('/home/firefox/firefox')
 
@@ -73,30 +74,29 @@ for i in range(0,len(url)):
     # fp.set_preference("browser.newtabpage.activity-stream.feeds.snippets", False)
     #fp.set_preference("browser.search.geoip.url", "")
 
-    #fp.set_preference("network.dnsCacheEntries", 20)
-
     options = Options()
     options.headless = True
 
     query_status = 1
     driver = webdriver.Firefox(capabilities=cap, options=options, firefox_profile=fp, firefox_binary=binary)
-    
+    driver.set_page_load_timeout(30)
 
-    driver.set_page_load_timeout(40)
     sleep(1)
     
     try: 
         #driver.get("http://nfpa.tmit.bme.hu/")
         tstamp = time()
         driver.get(url[i])
-        if rank_from+i == 7638: 
-	        try:
-	            WebDriverWait(driver, 1).until(EC.alert_is_present())
-	            alert = driver.switch_to.alert
-	            alert.accept()
-	            print("accepted")
-	        except: 
-	            print("No alert found")
+
+        #handle pop-up on untrusted/auth-required website 
+        try:
+            WebDriverWait(driver, 1).until(EC.alert_is_present())
+            alert = driver.switch_to.alert
+            alert.dismiss()
+            print("Alert dismissed")
+            query_status = -1 #alert 
+        except: 
+            print("No alert found")
 
     except:
         print("unable to query result")
